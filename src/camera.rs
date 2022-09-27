@@ -1,5 +1,5 @@
 use crate::rtweekend::degrees_to_radians;
-use crate::{random_double, Point3, Ray, Vec3};
+use crate::{random, Point3, Ray, Vec3};
 
 pub struct Camera {
     origin: Point3,
@@ -65,7 +65,7 @@ impl Camera {
                     - self.origin
                     - offset,
             ),
-            Some(random_double(Some(self.time0), Some(self.time1))),
+            Some(random(self.time0, self.time1)),
         )
     }
 }

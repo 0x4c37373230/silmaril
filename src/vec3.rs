@@ -61,9 +61,9 @@ impl Vec3 {
     // random_double() function
     pub fn random(min: Option<f32>, max: Option<f32>) -> Vec3 {
         Vec3::new(
-            Some(random_double(min, max)),
-            Some(random_double(min, max)),
-            Some(random_double(min, max)),
+            Some(random::<f32>(min.unwrap(), max.unwrap())),
+            Some(random::<f32>(min.unwrap(), max.unwrap())),
+            Some(random::<f32>(min.unwrap(), max.unwrap())),
         )
     }
 
@@ -114,8 +114,8 @@ impl Vec3 {
     pub fn random_in_unit_disk() -> Vec3 {
         loop {
             let p = Vec3::new(
-                Some(random_double(Some(-1.0), Some(1.0))),
-                Some(random_double(Some(-1.0), Some(1.0))),
+                Some(random::<f32>(-1.0, 1.0)),
+                Some(random::<f32>(-1.0, 1.0)),
                 None,
             );
 
@@ -162,7 +162,7 @@ impl std::ops::DivAssign<f32> for Vec3 {
     }
 }
 
-use crate::rtweekend::random_double;
+use crate::rtweekend::random;
 pub use Vec3 as Point3;
 pub use Vec3 as Color;
 

@@ -1,7 +1,6 @@
 use crate::aabb::AABB;
 use crate::material::Material;
 use crate::{Point3, Ray, Vec3};
-use std::borrow::BorrowMut;
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -103,7 +102,7 @@ impl Hittable for Sphere {
 }
 
 pub struct HittableList {
-    objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Rc<dyn Hittable>>,
 }
 
 impl HittableList {

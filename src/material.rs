@@ -1,4 +1,4 @@
-use crate::{random_double, Color, HitRecord, Ray, Vec3};
+use crate::{random, Color, HitRecord, Ray, Vec3};
 
 pub trait Material {
     fn scatter(
@@ -120,7 +120,7 @@ impl Material for Dielectric {
         let direction: Vec3;
 
         if cannot_refract
-            || Dielectric::reflectance(cos_theta, refraction_ratio) > random_double(None, None)
+            || Dielectric::reflectance(cos_theta, refraction_ratio) > random::<f32>(0.0, 1.0)
         {
             direction = Vec3::reflect(&unit_direction, &hit_rec.normal);
         } else {

@@ -1,26 +1,27 @@
-use crate::{Point3, Ray, Vec3};
-use std::cmp;
+use std::cmp::Ordering;
+use crate::{Hittable, Point3, Ray, Vec3};
 use std::mem::swap;
+use std::rc::Rc;
 
 #[derive(Clone, Copy)]
 pub struct AABB {
-    maximum: Point3,
-    minimum: Point3,
+    pub(crate) maximum: Point3,
+    pub(crate) minimum: Point3,
 }
 
 impl AABB {
-    pub(crate) fn new(maximum: Point3, minimum: Point3) -> AABB {
+    pub fn new(maximum: Point3, minimum: Point3) -> AABB {
         AABB { maximum, minimum }
     }
 
-    fn max(&self) -> &Point3 {
+    pub fn max(&self) -> &Point3 {
         &self.maximum
     }
-    fn min(&self) -> &Point3 {
+    pub fn min(&self) -> &Point3 {
         &self.minimum
     }
 
-    fn hit(&self, ray: &Ray, mut t_max: f32, mut t_min: f32) -> bool {
+    pub fn hit(&self, ray: &Ray, mut t_max: f32, mut t_min: f32) -> bool {
         for a in 0..3 {
             let inv_d = 1.0 / ray.direction().x();
             let mut t0 = (self.min().x() - ray.origin().x()) * inv_d;
@@ -54,5 +55,32 @@ impl AABB {
         );
 
         AABB::new(small, big)
+    }
+
+    pub fn box_compare(a: Rc<dyn Hittable>, b: Rc<dyn Hittable>, axis: i32) -> Ordering {
+        let mut box_a: AABB = AABB {
+            maximum: Vec3 { e: [0.0, 0.0, 0.0] },
+            minimum: Vec3 { e: [0.0, 0.0, 0.0] },
+        };
+        let mut box_b: AABB = AABB {
+            maximum: Vec3 { e: [0.0, 0.0, 0.0] },
+            minimum: Vec3 { e: [0.0, 0.0, 0.0] },
+        };
+
+        if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {
+            eprintln!("No bounding box in bvh_node constructor.");
+        }
+
+        box_a.min().e[axis as usize].partial_cmp(&box_b.min().e[axis as usize]).unwrap()
+    }
+
+    pub fn box_x_compare(a: Rc<dyn Hittable>, b: Rc<dyn Hittable>) -> Ordering {
+        Self::box_compare(a, b, 0)
+    }
+    pub fn box_y_compare(a: Rc<dyn Hittable>, b: Rc<dyn Hittable>) -> Ordering {
+        Self::box_compare(a, b, 1)
+    }
+    pub fn box_z_compare(a: Rc<dyn Hittable>, b: Rc<dyn Hittable>) -> Ordering {
+        Self::box_compare(a, b, 2)
     }
 }

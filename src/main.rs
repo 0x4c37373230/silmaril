@@ -3,13 +3,14 @@ use crate::hittable::{HitRecord, Hittable, HittableList, Sphere};
 use crate::material::{Dielectric, Lambertian, Material, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
-use crate::rtweekend::{clamp, random_double};
+use crate::rtweekend::{clamp, random};
 use crate::vec3::{Color, Point3, Vec3};
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
 
 mod aabb;
+mod bvh;
 mod camera;
 mod hittable;
 mod material;
@@ -17,7 +18,6 @@ mod moving_sphere;
 mod ray;
 mod rtweekend;
 mod vec3;
-mod bvh;
 
 fn main() {
     // Image
@@ -58,8 +58,8 @@ fn main() {
             let mut pixel_color = Color::new(None, None, None);
 
             for _s in 0..samples_per_pixel {
-                let u = (i as f32 + random_double(None, None)) / (img_width - 1) as f32;
-                let v = (j as f32 + random_double(None, None)) / (img_height - 1) as f32;
+                let u = (i as f32 + random::<f32>(0.0, 1.0)) / (img_width - 1) as f32;
+                let v = (j as f32 + random::<f32>(0.0, 1.0)) / (img_height - 1) as f32;
                 let ray = cam.get_ray(u, v);
                 pixel_color += ray_color(ray, &world, max_depth);
             }
@@ -127,11 +127,11 @@ fn random_scene() -> HittableList {
 
     for a in -11..11 {
         for b in -11..11 {
-            let choose_mat = random_double(None, None);
+            let choose_mat = random::<f32>(0.0, 1.0);
             let center = Point3::new(
-                Some(a as f32 + 0.9 * random_double(None, None)),
+                Some(a as f32 + 0.9 * random::<f32>(0.0, 1.0)),
                 Some(0.2),
-                Some(b as f32 + 0.9 * random_double(None, None)),
+                Some(b as f32 + 0.9 * random::<f32>(0.0, 1.0)),
             );
 
             if (center - Point3::new(Some(4.0), Some(0.2), None)).len() > 0.9 {
@@ -140,14 +140,13 @@ fn random_scene() -> HittableList {
                 if choose_mat < 0.8 {
                     let albedo = Color::random(None, None) * Color::random(None, None);
                     mat_sphere = Rc::new(Lambertian::new(albedo));
-                    let center2 =
-                        center + Vec3::new(None, Some(random_double(None, Some(0.5))), None);
+                    let center2 = center + Vec3::new(None, Some(random(0.0, 0.5)), None);
                     world.add(Rc::new(MovingSphere::new(
                         center, center2, 0.0, 1.0, 0.2, mat_sphere,
                     )));
                 } else if choose_mat < 0.95 {
                     let albedo = Color::random(Some(0.5), Some(1.0));
-                    let fuzz = random_double(None, Some(0.5));
+                    let fuzz = random::<f32>(0.0, 0.5);
                     mat_sphere = Rc::new(Metal::new(albedo, fuzz));
                     world.add(Rc::new(Sphere::new(center, 0.2, mat_sphere)));
                 } else {
