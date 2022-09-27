@@ -1,6 +1,6 @@
-use std::cmp::Ordering;
 use crate::aabb::AABB;
 use crate::{random, HitRecord, Hittable, HittableList, Ray, Vec3};
+use std::cmp::Ordering;
 use std::rc::Rc;
 
 pub struct BvhNode {

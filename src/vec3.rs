@@ -61,9 +61,9 @@ impl Vec3 {
     // random_double() function
     pub fn random(min: Option<f32>, max: Option<f32>) -> Vec3 {
         Vec3::new(
-            Some(random::<f32>(min.unwrap(), max.unwrap())),
-            Some(random::<f32>(min.unwrap(), max.unwrap())),
-            Some(random::<f32>(min.unwrap(), max.unwrap())),
+            Some(random::<f32>(min.unwrap_or(0.0), max.unwrap_or(1.0))),
+            Some(random::<f32>(min.unwrap_or(0.0), max.unwrap_or(1.0))),
+            Some(random::<f32>(min.unwrap_or(0.0), max.unwrap_or(1.0))),
         )
     }
 

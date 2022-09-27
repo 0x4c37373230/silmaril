@@ -1,5 +1,5 @@
-use std::cmp::Ordering;
 use crate::{Hittable, Point3, Ray, Vec3};
+use std::cmp::Ordering;
 use std::mem::swap;
 use std::rc::Rc;
 
@@ -65,7 +65,9 @@ impl AABB {
             eprintln!("No bounding box in bvh_node constructor.");
         }
 
-        box_a.min().e[axis as usize].partial_cmp(&box_b.min().e[axis as usize]).unwrap()
+        box_a.min().e[axis as usize]
+            .partial_cmp(&box_b.min().e[axis as usize])
+            .unwrap()
     }
 
     pub fn box_x_compare(a: Rc<dyn Hittable>, b: Rc<dyn Hittable>) -> Ordering {

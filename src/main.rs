@@ -8,6 +8,7 @@ use crate::vec3::{Color, Point3, Vec3};
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
+use crate::texture::CheckerTexture;
 
 mod aabb;
 mod bvh;
@@ -17,6 +18,7 @@ mod material;
 mod moving_sphere;
 mod ray;
 mod rtweekend;
+mod texture;
 mod vec3;
 
 fn main() {
@@ -118,11 +120,16 @@ fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
 
 fn random_scene() -> HittableList {
     let mut world = HittableList::new(None);
-    let mat_ground = Rc::new(Lambertian::new(Color::new(Some(0.5), Some(0.5), Some(0.5))));
+    /* let mat_ground = Rc::new(Lambertian::from(&Color::new(
+        Some(0.5),
+        Some(0.5),
+        Some(0.5),
+    ))); */
+    let checker = Rc::new(CheckerTexture::from(Color::new(Some(0.2), Some(0.3), Some(0.1)), Color::new(Some(0.9), Some(0.9), Some(0.9))));
     world.add(Rc::new(Sphere::new(
         Point3::new(None, Some(-1000.0), None),
         1000.0,
-        mat_ground,
+        Rc::new(Lambertian::new(checker)),
     )));
 
     for a in -11..11 {
@@ -139,7 +146,7 @@ fn random_scene() -> HittableList {
 
                 if choose_mat < 0.8 {
                     let albedo = Color::random(None, None) * Color::random(None, None);
-                    mat_sphere = Rc::new(Lambertian::new(albedo));
+                    mat_sphere = Rc::new(Lambertian::from(&albedo));
                     let center2 = center + Vec3::new(None, Some(random(0.0, 0.5)), None);
                     world.add(Rc::new(MovingSphere::new(
                         center, center2, 0.0, 1.0, 0.2, mat_sphere,
@@ -163,7 +170,11 @@ fn random_scene() -> HittableList {
         1.0,
         mat1,
     )));
-    let mat2 = Rc::new(Lambertian::new(Color::new(Some(0.4), Some(0.2), Some(0.1))));
+    let mat2 = Rc::new(Lambertian::from(&Color::new(
+        Some(0.4),
+        Some(0.2),
+        Some(0.1),
+    )));
     world.add(Rc::new(Sphere::new(
         Point3::new(Some(-4.0), Some(1.0), None),
         1.0,
