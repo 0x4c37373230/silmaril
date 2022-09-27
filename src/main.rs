@@ -29,18 +29,27 @@ fn main() {
     let samples_per_pixel = 100; //500;
     let max_depth = 50;
     // World
-    let world = random_scene();
-    // Camera
+    let world: HittableList;
     let look_from = Point3::new(Some(13.0), Some(2.0), Some(3.0));
     let look_at = Point3::new(None, None, None);
+    let v_fov: f32 = 20.0; //40.0;
+    let mut aperture: f32 = 0.0;
+
+    match 1 {
+         1 => {
+             world = random_scene();
+             aperture = 0.1;
+         }
+         2 | _ => world = two_spheres()
+    }
+    // Camera
     let v_up = Point3::new(None, Some(1.0), None);
     let dist_to_focus = 10.0;
-    let aperture: f32 = 0.1;
     let cam = Camera::new(
         look_from,
         look_at,
         v_up,
-        20.0,
+        v_fov,
         aspect_ratio,
         aperture,
         dist_to_focus,
@@ -188,4 +197,21 @@ fn random_scene() -> HittableList {
     )));
 
     return world;
+}
+
+fn two_spheres() -> HittableList {
+    let mut objects = HittableList::new(None);
+    let checker = Rc::new(CheckerTexture::from(Color::new(Some(0.2), Some(0.3), Some(0.1)), Color::new(Some(0.9), Some(0.9), Some(0.9))));
+    objects.add(Rc::new(Sphere::new(
+        Point3::new(None, Some(-10.0), None),
+        10.0,
+        Rc::new(Lambertian::new(checker.clone())),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        Point3::new(None, Some(10.0), None),
+        10.0,
+        Rc::new(Lambertian::new(checker)),
+    )));
+
+    objects
 }

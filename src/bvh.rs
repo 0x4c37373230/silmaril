@@ -23,8 +23,7 @@ impl BvhNode {
     ) -> BvhNode {
         let mut objects = src_objects.clone();
         let axis = random::<i32>(0, 3);
-        type Comparator = fn(Rc<dyn Hittable>, Rc<dyn Hittable>) -> Ordering;
-        let comparator: Comparator = if axis == 0 {
+        let comparator = if axis == 0 {
             AABB::box_x_compare
         } else if axis == 1 {
             AABB::box_y_compare
