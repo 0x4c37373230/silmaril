@@ -4,11 +4,11 @@ use crate::material::{Dielectric, Lambertian, Material, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
 use crate::rtweekend::{clamp, random};
+use crate::texture::{CheckerTexture, NoiseTexture};
 use crate::vec3::{Color, Point3, Vec3};
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
-use crate::texture::CheckerTexture;
 
 mod aabb;
 mod bvh;
@@ -16,6 +16,7 @@ mod camera;
 mod hittable;
 mod material;
 mod moving_sphere;
+mod perlin;
 mod ray;
 mod rtweekend;
 mod texture;
@@ -35,12 +36,13 @@ fn main() {
     let v_fov: f32 = 20.0; //40.0;
     let mut aperture: f32 = 0.0;
 
-    match 1 {
-         1 => {
-             world = random_scene();
-             aperture = 0.1;
-         }
-         2 | _ => world = two_spheres()
+    match 0 {
+        1 => {
+            world = random_scene();
+            aperture = 0.1;
+        }
+        2 => world = two_spheres(),
+        3 | _ => world = two_perlin_spheres(),
     }
     // Camera
     let v_up = Point3::new(None, Some(1.0), None);
@@ -134,7 +136,10 @@ fn random_scene() -> HittableList {
         Some(0.5),
         Some(0.5),
     ))); */
-    let checker = Rc::new(CheckerTexture::from(Color::new(Some(0.2), Some(0.3), Some(0.1)), Color::new(Some(0.9), Some(0.9), Some(0.9))));
+    let checker = Rc::new(CheckerTexture::from(
+        Color::new(Some(0.2), Some(0.3), Some(0.1)),
+        Color::new(Some(0.9), Some(0.9), Some(0.9)),
+    ));
     world.add(Rc::new(Sphere::new(
         Point3::new(None, Some(-1000.0), None),
         1000.0,
@@ -201,7 +206,10 @@ fn random_scene() -> HittableList {
 
 fn two_spheres() -> HittableList {
     let mut objects = HittableList::new(None);
-    let checker = Rc::new(CheckerTexture::from(Color::new(Some(0.2), Some(0.3), Some(0.1)), Color::new(Some(0.9), Some(0.9), Some(0.9))));
+    let checker = Rc::new(CheckerTexture::from(
+        Color::new(Some(0.2), Some(0.3), Some(0.1)),
+        Color::new(Some(0.9), Some(0.9), Some(0.9)),
+    ));
     objects.add(Rc::new(Sphere::new(
         Point3::new(None, Some(-10.0), None),
         10.0,
@@ -211,6 +219,23 @@ fn two_spheres() -> HittableList {
         Point3::new(None, Some(10.0), None),
         10.0,
         Rc::new(Lambertian::new(checker)),
+    )));
+
+    objects
+}
+
+fn two_perlin_spheres() -> HittableList {
+    let mut objects = HittableList::new(None);
+    let perlin_texture = Rc::new(NoiseTexture::empty());
+    objects.add(Rc::new(Sphere::new(
+        Point3::new(None, Some(-1000.0), None),
+        1000.0,
+        Rc::new(Lambertian::new(perlin_texture.clone())),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        Point3::new(None, Some(2.0), None),
+        2.0,
+        Rc::new(Lambertian::new(perlin_texture)),
     )));
 
     objects

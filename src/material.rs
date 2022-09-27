@@ -1,7 +1,7 @@
+use crate::texture::SolidColor;
 use crate::texture::Texture;
 use crate::{random, Color, HitRecord, Ray, Vec3};
 use std::rc::Rc;
-use crate::texture::SolidColor;
 
 pub trait Material {
     fn scatter(
