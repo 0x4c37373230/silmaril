@@ -73,10 +73,7 @@ impl Hittable for MovingSphere {
             self.center(time0) - Vec3::new(Some(self.radius), Some(self.radius), Some(self.radius)),
             self.center(time0) + Vec3::new(Some(self.radius), Some(self.radius), Some(self.radius)),
         );
-        let box1 = AABB::new(
-            self.center(time1) - Vec3::new(Some(self.radius), Some(self.radius), Some(self.radius)),
-            self.center(time1) + Vec3::new(Some(self.radius), Some(self.radius), Some(self.radius)),
-        );
+        let box1 = box0.clone();
         *output_box = AABB::surrounding_box(box0, box1);
 
         true

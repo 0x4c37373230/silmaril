@@ -5,8 +5,8 @@ use std::rc::Rc;
 
 #[derive(Clone, Copy)]
 pub struct AABB {
-    pub(crate) maximum: Point3,
-    pub(crate) minimum: Point3,
+    pub maximum: Point3,
+    pub minimum: Point3,
 }
 
 impl AABB {
@@ -58,14 +58,8 @@ impl AABB {
     }
 
     pub fn box_compare(a: Rc<dyn Hittable>, b: Rc<dyn Hittable>, axis: i32) -> Ordering {
-        let mut box_a: AABB = AABB {
-            maximum: Vec3 { e: [0.0, 0.0, 0.0] },
-            minimum: Vec3 { e: [0.0, 0.0, 0.0] },
-        };
-        let mut box_b: AABB = AABB {
-            maximum: Vec3 { e: [0.0, 0.0, 0.0] },
-            minimum: Vec3 { e: [0.0, 0.0, 0.0] },
-        };
+        let mut box_a = AABB::new(Vec3::new(None, None, None), Vec3::new(None, None, None));
+        let mut box_b = box_a.clone();
 
         if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {
             eprintln!("No bounding box in bvh_node constructor.");

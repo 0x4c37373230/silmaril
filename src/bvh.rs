@@ -53,14 +53,8 @@ impl BvhNode {
             temp_right = Rc::new(Self::new(&objects, mid, end, time0, time1))
         }
 
-        let mut box_left: AABB = AABB {
-            maximum: Vec3 { e: [0.0, 0.0, 0.0] },
-            minimum: Vec3 { e: [0.0, 0.0, 0.0] },
-        };
-        let mut box_right: AABB = AABB {
-            maximum: Vec3 { e: [0.0, 0.0, 0.0] },
-            minimum: Vec3 { e: [0.0, 0.0, 0.0] },
-        };
+        let mut box_left = AABB::new(Vec3::new(None, None, None), Vec3::new(None, None, None));
+        let mut box_right = box_left.clone();
 
         if !temp_left.bounding_box(time0, time1, &mut box_left)
             || !temp_right.bounding_box(time0, time1, &mut box_right)

@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 
 #[derive(Copy, Clone)]
 pub struct Vec3 {
-    pub(crate) e: [f32; 3],
+    pub e: [f32; 3],
 }
 
 impl Vec3 {
