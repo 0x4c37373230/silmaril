@@ -46,9 +46,13 @@ impl Perlin {
     }
 
     pub fn noise(&self, point: &Point3) -> f32 {
-        let u = point.x() - f32::floor(point.x());
-        let v = point.y() - f32::floor(point.y());
-        let w = point.z() - f32::floor(point.z());
+        let mut u = point.x() - f32::floor(point.x());
+        let mut v = point.y() - f32::floor(point.y());
+        let mut w = point.z() - f32::floor(point.z());
+        // Hermite cubic to round off the interpolation
+        u = u * u * (3.0 - 2.0 * u);
+        v = v * v * (3.0 - 2.0 * v);
+        w = w * w * (3.0 - 2.0 * w);
         let i = f32::floor(point.x()) as i32;
         let j = f32::floor(point.y()) as i32;
         let k = f32::floor(point.z()) as i32;
