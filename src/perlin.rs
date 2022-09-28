@@ -1,4 +1,4 @@
-use crate::{random, vec3, Point3, Vec3};
+use crate::{random, Point3, Vec3};
 
 pub struct Perlin {
     ran_vec: Vec<Vec3>,
@@ -46,9 +46,9 @@ impl Perlin {
     }
 
     pub fn noise(&self, point: &Point3) -> f32 {
-        let mut u = point.x() - f32::floor(point.x());
-        let mut v = point.y() - f32::floor(point.y());
-        let mut w = point.z() - f32::floor(point.z());
+        let u = point.x() - f32::floor(point.x());
+        let v = point.y() - f32::floor(point.y());
+        let w = point.z() - f32::floor(point.z());
         let i = f32::floor(point.x()) as i32;
         let j = f32::floor(point.y()) as i32;
         let k = f32::floor(point.z()) as i32;
@@ -90,5 +90,19 @@ impl Perlin {
         }
 
         accum
+    }
+
+    pub fn turbulence(&self, point: &Point3, depth: Option<i32>) -> f32 {
+        let mut accum = 0.0f32;
+        let mut temp_p = *point;
+        let mut weight = 1.0f32;
+
+        for _ in 0..depth.unwrap_or(7) {
+            accum += weight * self.noise(&temp_p);
+            weight *= 0.5;
+            temp_p *= 2.0;
+        }
+
+        accum.abs()
     }
 }
