@@ -1,16 +1,18 @@
+use crate::aarect::XYRect;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable, HittableList, Sphere};
-use crate::material::{Dielectric, Lambertian, Material, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
-use crate::rtweekend::{clamp, random};
-use crate::texture::{CheckerTexture, NoiseTexture};
+use crate::rtweekend::{clamp, INFINITY, random};
+use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use crate::vec3::{Color, Point3, Vec3};
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
 
 mod aabb;
+mod aarect;
 mod bvh;
 mod camera;
 mod hittable;
@@ -27,14 +29,15 @@ fn main() {
     let aspect_ratio: f32 = 3.0 / 2.0;
     let img_width = 400; //1200; //200;
     let img_height = (img_width as f32 / aspect_ratio) as i32;
-    let samples_per_pixel = 100; //500;
+    let mut samples_per_pixel = 100; //500;
     let max_depth = 50;
     // World
     let world: HittableList;
-    let look_from = Point3::new(Some(13.0), Some(2.0), Some(3.0));
-    let look_at = Point3::new(None, None, None);
+    let mut look_from = Point3::new(Some(13.0), Some(2.0), Some(3.0));
+    let mut look_at = Point3::new(None, None, None);
     let v_fov: f32 = 20.0; //40.0;
     let mut aperture: f32 = 0.0;
+    let mut background = Color::new(Some(0.70), Some(0.80), Some(1.0));
 
     match 0 {
         1 => {
@@ -42,7 +45,15 @@ fn main() {
             aperture = 0.1;
         }
         2 => world = two_spheres(),
-        3 | _ => world = two_perlin_spheres(),
+        3 => world = two_perlin_spheres(),
+        4 => world = earth(),
+        5 | _ => {
+            world = simple_light();
+            samples_per_pixel = 400;
+            background = Color::new(None, None, None);
+            look_from = Point3::new(Some(26.0), Some(3.0), Some(6.0));
+            look_at = Point3::new(None, Some(2.0), None);
+        },
     }
     // Camera
     let v_up = Point3::new(None, Some(1.0), None);
@@ -74,7 +85,7 @@ fn main() {
                 let u = (i as f32 + random::<f32>(0.0, 1.0)) / (img_width - 1) as f32;
                 let v = (j as f32 + random::<f32>(0.0, 1.0)) / (img_height - 1) as f32;
                 let ray = cam.get_ray(u, v);
-                pixel_color += ray_color(ray, &world, max_depth);
+                pixel_color += ray_color(ray, &background, &world, max_depth);
             }
             write_color(pixel_color, samples_per_pixel) // PPM file contents
         }
@@ -99,34 +110,35 @@ fn write_color(pixel_color: Color, samples_per_pixel: i32) {
     )
 }
 
-fn ray_color(ray: Ray, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(ray: Ray, background: &Color, world: &dyn Hittable, depth: i32) -> Color {
     let mut hit_rec = HitRecord::empty();
 
     if depth <= 0 {
         return Color::new(None, None, None);
     }
 
-    if world.hit(&ray, 0.001, crate::rtweekend::INFINITY, &mut hit_rec) {
-        let mut scattered = Ray::new(None, None, None);
-        let mut attenuation = Color::new(None, None, None);
-
-        if hit_rec.material_ptr.as_ref().unwrap().scatter(
-            &ray,
-            &hit_rec,
-            &mut attenuation,
-            &mut scattered,
-        ) {
-            return attenuation * ray_color(scattered, world, depth - 1);
-        }
-
-        return Color::new(None, None, None);
+    if !world.hit(&ray, 0.001, INFINITY, &mut hit_rec) {
+        return *background;
     }
 
-    let unit_direction = Vec3::unit_vector(ray.direction());
-    let t = 0.5 * (unit_direction.y() + 1.0);
+    let mut scattered = Ray::new(None, None, None);
+    let mut attenuation = Color::new(None, None, None);
+    let emitted = hit_rec
+        .material_ptr
+        .as_ref()
+        .unwrap()
+        .emitted(hit_rec.u, hit_rec.v, &hit_rec.point);
 
-    Color::new(Some(1.0), Some(1.0), Some(1.0)) * (1.0 - t)
-        + Color::new(Some(0.5), Some(0.7), Some(1.0)) * t
+    if !hit_rec
+        .material_ptr
+        .as_ref()
+        .unwrap()
+        .scatter(&ray, &hit_rec, &mut attenuation, &mut scattered)
+    {
+        return emitted;
+    }
+
+    emitted + attenuation * ray_color(scattered, background, world, depth - 1)
 }
 
 fn random_scene() -> HittableList {
@@ -236,6 +248,44 @@ fn two_perlin_spheres() -> HittableList {
         Point3::new(None, Some(2.0), None),
         2.0,
         Rc::new(Lambertian::new(perlin_texture)),
+    )));
+
+    objects
+}
+
+fn earth() -> HittableList {
+    let earth_texture = Rc::new(ImageTexture::new("../../textures/earthmap.jpg"));
+    let earth_surface = Rc::new(Lambertian::new(earth_texture));
+    let globe = Rc::new(Sphere::new(Vec3::new(None, None, None), 2.0, earth_surface));
+
+    HittableList::new(Some(globe))
+}
+
+fn simple_light() -> HittableList {
+    let mut objects = HittableList::new(None);
+    let perlin_texture = Rc::new(NoiseTexture::new(Some(4.0)));
+    objects.add(Rc::new(Sphere::new(
+        Point3::new(None, Some(-1000.0), None),
+        1000.0,
+        Rc::new(Lambertian::new(perlin_texture.clone())),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        Point3::new(None, Some(2.0), None),
+        2.0,
+        Rc::new(Lambertian::new(perlin_texture)),
+    )));
+    let diff_light = Rc::new(DiffuseLight::from(Color::new(
+        Some(4.0),
+        Some(4.0),
+        Some(4.0),
+    )));
+    objects.add(Rc::new(XYRect::new(
+        3.0,
+        5.0,
+        1.0,
+        3.0,
+        -2.0,
+        Some(diff_light),
     )));
 
     objects
