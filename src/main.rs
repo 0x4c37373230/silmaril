@@ -1,10 +1,10 @@
-use crate::aarect::XYRect;
+use crate::aarect::{XYRect, XZRect, YZRect};
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable, HittableList, Sphere};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
-use crate::rtweekend::{clamp, INFINITY, random};
+use crate::rtweekend::{clamp, random, INFINITY};
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use crate::vec3::{Color, Point3, Vec3};
 use std::io;
@@ -26,16 +26,15 @@ mod vec3;
 
 fn main() {
     // Image
-    let aspect_ratio: f32 = 3.0 / 2.0;
-    let img_width = 400; //1200; //200;
-    let img_height = (img_width as f32 / aspect_ratio) as i32;
+    let mut aspect_ratio: f32 = 3.0 / 2.0;
+    let mut img_width = 400; //1200; //200;
     let mut samples_per_pixel = 100; //500;
     let max_depth = 50;
     // World
     let world: HittableList;
     let mut look_from = Point3::new(Some(13.0), Some(2.0), Some(3.0));
     let mut look_at = Point3::new(None, None, None);
-    let v_fov: f32 = 20.0; //40.0;
+    let mut v_fov: f32 = 20.0; //40.0;
     let mut aperture: f32 = 0.0;
     let mut background = Color::new(Some(0.70), Some(0.80), Some(1.0));
 
@@ -47,14 +46,26 @@ fn main() {
         2 => world = two_spheres(),
         3 => world = two_perlin_spheres(),
         4 => world = earth(),
-        5 | _ => {
+        5 => {
             world = simple_light();
             samples_per_pixel = 400;
             background = Color::new(None, None, None);
             look_from = Point3::new(Some(26.0), Some(3.0), Some(6.0));
             look_at = Point3::new(None, Some(2.0), None);
-        },
+        }
+        6 | _ => {
+            world = cornell_box();
+            aspect_ratio = 1.0;
+            img_width = 600;
+            samples_per_pixel = 200;
+            background = Color::new(None, None, None);
+            look_from = Point3::new(Some(278.0), Some(278.0), Some(-800.0));
+            look_at = Point3::new(Some(278.0), Some(278.0), None);
+            v_fov = 40.0;
+        }
     }
+    // Image 2
+    let img_height = (img_width as f32 / aspect_ratio) as i32;
     // Camera
     let v_up = Point3::new(None, Some(1.0), None);
     let dist_to_focus = 10.0;
@@ -123,18 +134,19 @@ fn ray_color(ray: Ray, background: &Color, world: &dyn Hittable, depth: i32) -> 
 
     let mut scattered = Ray::new(None, None, None);
     let mut attenuation = Color::new(None, None, None);
-    let emitted = hit_rec
-        .material_ptr
-        .as_ref()
-        .unwrap()
-        .emitted(hit_rec.u, hit_rec.v, &hit_rec.point);
+    let emitted =
+        hit_rec
+            .material_ptr
+            .as_ref()
+            .unwrap()
+            .emitted(hit_rec.u, hit_rec.v, &hit_rec.point);
 
-    if !hit_rec
-        .material_ptr
-        .as_ref()
-        .unwrap()
-        .scatter(&ray, &hit_rec, &mut attenuation, &mut scattered)
-    {
+    if !hit_rec.material_ptr.as_ref().unwrap().scatter(
+        &ray,
+        &hit_rec,
+        &mut attenuation,
+        &mut scattered,
+    ) {
         return emitted;
     }
 
@@ -286,6 +298,74 @@ fn simple_light() -> HittableList {
         3.0,
         -2.0,
         Some(diff_light),
+    )));
+
+    objects
+}
+
+fn cornell_box() -> HittableList {
+    let mut objects = HittableList::new(None);
+    let red = Rc::new(Lambertian::from(&Color::new(
+        Some(0.65),
+        Some(0.05),
+        Some(0.05),
+    )));
+    let white = Rc::new(Lambertian::from(&Color::new(
+        Some(0.73),
+        Some(0.73),
+        Some(0.73),
+    )));
+    let green = Rc::new(Lambertian::from(&Color::new(
+        Some(0.12),
+        Some(0.45),
+        Some(0.15),
+    )));
+    let light = Rc::new(DiffuseLight::from(Color::new(
+        Some(15.0),
+        Some(15.0),
+        Some(15.0),
+    )));
+
+    objects.add(Rc::new(YZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        Some(green),
+    )));
+    objects.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, Some(red))));
+    objects.add(Rc::new(XZRect::new(
+        213.0,
+        343.0,
+        227.0,
+        332.0,
+        554.0,
+        Some(light),
+    )));
+    objects.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        Some(white.clone()),
+    )));
+    objects.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        Some(white.clone()),
+    )));
+    objects.add(Rc::new(XYRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        Some(white),
     )));
 
     objects
