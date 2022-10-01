@@ -1,4 +1,5 @@
 use crate::aarect::{XYRect, XZRect, YZRect};
+use crate::block::Block;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable, HittableList, Sphere};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
@@ -13,6 +14,7 @@ use std::rc::Rc;
 
 mod aabb;
 mod aarect;
+mod block;
 mod bvh;
 mod camera;
 mod hittable;
@@ -365,7 +367,17 @@ fn cornell_box() -> HittableList {
         0.0,
         555.0,
         555.0,
-        Some(white),
+        Some(white.clone()),
+    )));
+    objects.add(Rc::new(Block::new(
+        &Point3::new(Some(130.0), None, Some(65.0)),
+        &Point3::new(Some(295.0), Some(165.0), Some(230.0)),
+        white.clone(),
+    )));
+    objects.add(Rc::new(Block::new(
+        &Point3::new(Some(265.0), None, Some(295.0)),
+        &Point3::new(Some(430.0), Some(330.0), Some(460.0)),
+        white,
     )));
 
     objects
